@@ -1,8 +1,8 @@
-import psycopg2
-from psycopg2 import OperationalError
-from datetime import datetime, timedelta
 import csv
 from io import StringIO
+from datetime import timedelta
+import psycopg2
+from psycopg2 import OperationalError
 
 
 def create_connection(db_name, db_user, db_password, db_host, db_port):
@@ -38,10 +38,48 @@ def check_duplicate(data, previous, previous_time) -> bool:
     return False
 
 
-def send_chunk(blop: list) -> tuple:
-    size = len(blop)
-    chunk_size = 5000000
-    
+def create_new_table(cursor):
+    new_list: list[tuple] = []
+    data = cursor.fetchone()
+    tmp_date = data[0]
+    new_list.append(
+        (str(data[0]), data[1], data[2], data[3], data[4], data[5])
+    )
+    data = cursor.fetchone()
+    i = 0
+    while data is not None:
+        print(i)
+        if check_duplicate(data, new_list[-1], tmp_date) is False:
+            new_list.append(
+                (str(data[0]), data[1], data[2], data[3], data[4], data[5])
+            )
+        tmp_date = data[0]
+        data = cursor.fetchone()
+        i += 1
+
+    return new_list
+
+
+def send_chunk(input_list: list, cursor):
+    data_size = len(input_list)
+    chunk_size = 100000
+    j = chunk_size
+    output: list[list[tuple]]= []
+    for i in range(0, data_size, chunk_size):
+        output_list = input_list[i:j]
+        buffer = StringIO()
+        writer = csv.writer(buffer)
+        for row in output_list:
+            writer.writerow(row)
+        buffer.seek(0)
+        cursor.copy_expert(
+            sql="""COPY customers.customersV2 FROM STDIN WITH CSV""",
+            file=buffer,
+        )
+        buffer.truncate(0)
+        buffer.seek(0)
+        j += chunk_size
+    return output
 
 
 def main():  # from io import StringIO
@@ -52,50 +90,26 @@ def main():  # from io import StringIO
         )
         connect.autocommit = True
         cursor = connect.cursor()
+
         create_table = """
-                CREATE TABLE IF NOT EXISTS customers.customersV2 (
-                event_time TIMESTAMPTZ,
-                event_type VARCHAR,
-                product_id INTEGER,
-                price FLOAT,
-                user_id BIGINT,
-                user_session UUID
-                )
-                """
+            CREATE TABLE IF NOT EXISTS customers.customersV2 (
+            event_time TIMESTAMPTZ,
+            event_type VARCHAR,
+            product_id INTEGER,
+            price FLOAT,
+            user_id BIGINT,
+            user_session UUID
+            )
+            """
         cursor.execute(create_table)
+
         query = """SELECT * FROM customers.customers\
             ORDER BY event_type, product_id, price,\
                 user_id, user_session, event_time"""
         cursor.execute(query)
-        new_list: list[tuple] = []
-        data = cursor.fetchone()
-        tmp_date = data[0]
-        new_list.append(
-            (str(data[0]), data[1], data[2], data[3], data[4], data[5])
-        )
-        data = cursor.fetchone()
-        i = 0
-        while data is not None:
-            print(i)
-            i += 1
-            if i == 5000000:
-                break
-            if check_duplicate(data, new_list[-1], tmp_date) is False:
-                new_list.append(
-                    (str(data[0]), data[1], data[2], data[3], data[4], data[5])
-                )
-            tmp_date = data[0]
-            data = cursor.fetchone()
 
-        buffer = StringIO()
-        writer = csv.writer(buffer)
-        for row in new_list:
-            writer.writerow(row)
-        buffer.seek(0)  # rewind the buffer
-        cursor.copy_expert(
-            sql="""COPY customers.customersV2 FROM STDIN WITH CSV""",
-            file=buffer,
-        )
+        new_list = create_new_table(cursor)
+        send_chunk(new_list, cursor)
         cursor.close()
         connect.close()
 
