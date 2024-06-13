@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read("config.ini")
 
 
 def create_connection():
     connection = psycopg2.connect(
-        database=config['Postgres']['database'],
-        user=config['Postgres']['user'],
-        password=config['Postgres']['password'],
-        host=config['Postgres']['host'],
-        port=config['Postgres']['port']
+        database=config["Postgres"]["database"],
+        user=config["Postgres"]["user"],
+        password=config["Postgres"]["password"],
+        host=config["Postgres"]["host"],
+        port=config["Postgres"]["port"],
     )
     print("Connection to PostgreSQL DB successful")
 
@@ -37,7 +37,7 @@ def main():
         # total_count = sum(count)
         # pourcent = lambda x : round((x * 100) / total_count, 1)
         # pourcent_list = [pourcent(x) for x in count]
-        plt.pie(count, labels=event_type, autopct='%1.1f%%')
+        plt.pie(count, labels=event_type, autopct="%1.1f%%")
         plt.show()
 
     except OperationalError as e:
