@@ -27,19 +27,74 @@ def main():
     train_knight = load("Train_knight.csv")
     test_knight = load("Test_knight.csv")
     if train_knight is not None and test_knight is not None:
-        x = train_knight.drop(columns='knight')
+        x = train_knight.drop(
+            columns=[
+                "knight",
+                "Prescience",
+                "Push",
+                "Deflection",
+                "Survival",
+                "Midi-chlorien",
+                "Grasping",
+                "Pull",
+                "Awareness",
+                "Repulse",
+                "Attunement",
+                "Empowered",
+                "Dexterity",
+                "Delay",
+                "Slash",
+                "Sprint",
+                "Sensitivity",
+                "Stims",
+                "Strength",
+                "Recovery",
+                "Hability",
+                "Agility",
+            ]
+        )
         scaler = StandardScaler()
-        x = scaler.fit_transform(x)
-        y = train_knight['knight']
-        x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=42)
+        x = pd.DataFrame(scaler.fit_transform(x), columns=x.columns)
+        y = train_knight["knight"]
+        x_train, x_val, y_train, y_val = train_test_split(
+            x, y, test_size=0.2, random_state=42
+        )
 
-        model = KNeighborsClassifier(n_neighbors=9)
+        model = KNeighborsClassifier(n_neighbors=10)
         model.fit(x_train, y_train)
         predicted_val = model.predict(x_val)
         accuracy = accuracy_score(y_val, predicted_val)
         print(f"Accuracy: {accuracy}")
-        print(f"F1_score: {round(f1_score(y_val, predicted_val, average='macro'), 4)}")
+        print(
+            f"F1_score: {round(f1_score(y_val, predicted_val, average='macro'), 4)}"
+        )
 
+        x = test_knight.drop(
+            columns=[
+                "Prescience",
+                "Push",
+                "Deflection",
+                "Survival",
+                "Midi-chlorien",
+                "Grasping",
+                "Pull",
+                "Awareness",
+                "Repulse",
+                "Attunement",
+                "Empowered",
+                "Dexterity",
+                "Delay",
+                "Slash",
+                "Sprint",
+                "Sensitivity",
+                "Stims",
+                "Strength",
+                "Recovery",
+                "Hability",
+                "Agility",
+            ]
+        )
+        test_knight = pd.DataFrame(scaler.fit_transform(x), columns=x.columns)
         predicted_test = model.predict(test_knight)
         with open("KNN.txt", "w") as output:
             for item in predicted_test:

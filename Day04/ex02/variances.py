@@ -1,8 +1,9 @@
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.decomposition import PCA
-import numpy as np
+
+# import matplotlib.pyplot as plt
+# from sklearn.decomposition import PCA
+# import numpy as np
 
 
 def load(path: str):
@@ -37,15 +38,13 @@ def main():
         variances_sorted = data_var.sort_values().iloc[::-1]
         print(variances_sorted)
 
-        standardize(data)
-        pca = PCA(0.99)
-        pca.fit_transform(data)
-        print(pca.explained_variance_)
-        print(pca.explained_variance_ratio_)
-        cumul_var = np.cumsum(pca.explained_variance_ratio_) * 100
-        print(cumul_var)
-
-        # plt.show()
+        # standardize(data)
+        # pca = PCA(0.99)
+        # pca.fit_transform(data)
+        # print(pca.explained_variance_)
+        # print(pca.explained_variance_ratio_)
+        # cumul_var = np.cumsum(pca.explained_variance_ratio_) * 100
+        # print(cumul_var)
 
 
 if __name__ == "__main__":

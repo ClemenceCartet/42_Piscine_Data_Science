@@ -41,7 +41,9 @@ def main():
     data = load("Test_knight.csv")
     if data is not None:
         all_features = train_to_find_vif(data)
-        all_features_sorted = all_features.sort_values(by="VIF", ascending=False)
+        all_features_sorted = all_features.sort_values(
+            by="VIF", ascending=False
+        )
         print(all_features_sorted)
 
         # test1 = data.drop(
@@ -84,11 +86,13 @@ def main():
                 "Strength",
                 "Recovery",
                 "Hability",
-                "Agility"
+                "Agility",
             ]
         )
         all_features = train_to_find_vif(test2)
-        all_features_sorted = all_features.sort_values(by="VIF", ascending=False)
+        all_features_sorted = all_features.sort_values(
+            by="VIF", ascending=False
+        )
         print(all_features_sorted)
 
 
