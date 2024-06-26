@@ -30,7 +30,7 @@ def main():
         connect = create_connection()
         connect.autocommit = True
         cursor = connect.cursor()
-        with open("ex05/Clustering.sql", "r") as sql_file:
+        with open("ex05/Clustering1.sql", "r") as sql_file:
             sql_script = sql_file.read()
         cursor.execute(sql_script)
         datas = cursor.fetchall()
@@ -38,53 +38,38 @@ def main():
         c_groups = {
             "new": 0,
             "inactive": 0,
+            "platinum": 0,
             "gold": 0,
             "silver": 0,
-            "platinum": 0,
         }
         for data in datas:
-            # print(data)
-            if data[1] == 1 and data[2] == 2:
+            if data[1] == 1 and str(data[2]).find("2023-02") != -1:
                 c_groups["new"] += 1
-            elif data[1] == 1 and data[2] == 10 or data[1] == 2 and data[2] == 11:
+            elif (
+                str(data[3]).find("2022-11") != -1
+                or str(data[3]).find("2022-10") != -1
+            ):
                 c_groups["inactive"] += 1
             elif data[1] == 5:
-                c_groups["gold"] += 1
-            elif data[1] == 4:
-                c_groups["silver"] += 1
-            elif data[1] == 3:
                 c_groups["platinum"] += 1
+            elif data[1] == 4:
+                c_groups["gold"] += 1
+            elif data[1] == 3:
+                c_groups["silver"] += 1
 
-        # c_groups_list = []
-        # for key, value in c_groups.items():
-        #     print(f"{key}: {value}")
-        #     c_groups_list.append(value)
-        # c_groups_list = np.array(c_groups_list).reshape(len(c_groups_list), 1)
+        print(c_groups)
+        plt.barh(c_groups.keys(), c_groups.values())
+        plt.xlabel("number of cutsomers")
+        plt.ylabel("Total sales in million")
+        plt.show()
 
-        # kmeans_kwargs = {
-        #     "init": "k-means++",
-        #     "n_init": 10,
-        #     "max_iter": 300,
-        #     "random_state": 42,
-        # }
-        # kmeans = KMeans(n_clusters=5, **kmeans_kwargs)
-        # label = kmeans.fit_predict(c_groups_list)
-        # print(label)
-
-        # plt.figure(figsize=(10, 7))
-        # colors = ['r', 'g', 'b', 'p', 'y']
-        # for i in range(5):
-        #     indices_cluster = np.where(label == i)[0]
-        #     print(indices_cluster)
-        #     plt.scatter(c_groups_list[indices_cluster, 0], c_groups_list[indices_cluster, 1], color=colors[i])
-        # plt.xlabel("number of customers")
-        # plt.show()
-
-        cursor.execute(
-            """SELECT SUM(price) FROM customers.customersv3 \
-            WHERE event_type = 'purchase' GROUP BY user_id"""
-        )
-        purchases_per_customer = cursor.fetchall()
+        with open("ex05/Clustering2.sql", "r") as sql_file:
+            sql_script = sql_file.read()
+        cursor.execute(sql_script)
+        datas = cursor.fetchall()
+        nb_months = [element[1] for element in datas]
+        total_prices = [element[2] for element in datas]
+        blop = np.column_stack((nb_months, total_prices))
 
         kmeans_kwargs = {
             "init": "k-means++",
@@ -93,26 +78,31 @@ def main():
             "random_state": 42,
         }
         kmeans = KMeans(n_clusters=5, **kmeans_kwargs)
-        label = kmeans.fit_predict(purchases_per_customer)
-        ppc = np.array([elt for tup in purchases_per_customer for elt in tup]).reshape(
-            len(purchases_per_customer), 1
-        )
-        scaler = StandardScaler()
-        ppc_normalized = scaler.fit_transform(ppc)
+        labels = kmeans.fit_predict(blop)  # identifiant des clusters
+        centroids = kmeans.cluster_centers_
 
-        plt.figure(figsize=(10, 7))
-        colors = ["r", "g", "b", "y", "p"]
-        for i in range(5):
-            indices_cluster = np.where(label == i)[0]
-            plt.scatter(indices_cluster, ppc_normalized[indices_cluster], color=colors[i])
-        # plt.scatter(ppc[label == 0, 0], ppc[label == 0, 1], s=100, c="red", label="Cluster 1")
-        # plt.scatter(ppc[label == 1, 0], ppc[label == 1, 1], s=100, c="blue", label="Cluster 2")
-        # plt.scatter(ppc[label == 2, 0], ppc[label == 2, 1], s=100, c="green", label="Cluster 3")
-        # plt.scatter(ppc[label == 3, 0], ppc[label == 3, 1], s=100, c="pink", label="Cluster 4")
-        # plt.scatter(ppc[label == 4, 0], ppc[label == 4, 1], s=100, c="yellow", label="Cluster 5")
-        # plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=100, c="black", label="Centroids")
-        plt.title("Clusters")
-        plt.legend()
+        clusters = {}
+        for i, label in enumerate(labels):
+            if label not in clusters:
+                clusters[label] = []
+            clusters[label].append(blop[i])
+        colors = ["b", "g", "r", "c", "m"]
+        for i, (label, points) in enumerate(clusters.items()):
+            plt.scatter(
+                [(point[0]) for point in points],
+                [(point[1]) for point in points],
+                color=colors[i % len(colors)],
+            )
+
+        plt.scatter(
+            centroids[:, 0],
+            centroids[:, 1],
+            marker="x",
+            s=80,
+            color="r",
+        )
+        plt.xlabel("months")
+        plt.ylabel("total prices")
         plt.show()
 
         cursor.close()

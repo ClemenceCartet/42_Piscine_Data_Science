@@ -47,7 +47,7 @@ def main():
         plt.xlabel("price")
         plt.show()
 
-        plt.boxplot(prices, sym="", vert=False)
+        plt.boxplot(prices, sym="", vert=False, patch_artist=True)
         plt.ylim(0.9, 1.1)
         plt.xlabel("price")
         plt.show()
@@ -60,7 +60,7 @@ def main():
         prices = [item[0] for item in data]
         plt.boxplot(prices, vert=False)
         plt.ylim(0.9, 1.1)
-        plt.xlim(0, 45)
+        plt.xlim(-10, 200)
         plt.show()
 
         cursor.close()

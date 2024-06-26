@@ -48,6 +48,7 @@ def main():
             sse.append(kmeans.inertia_)
         plt.plot(range(1, 11), sse)
         plt.xlabel("Number of clusters")
+        plt.ylabel("SSE")
         plt.title("The Elbow Method")
         plt.grid()
         plt.show()

@@ -35,7 +35,7 @@ def main():
         )
         data = cursor.fetchall()
         frequency = [item[0] for item in data]
-        plt.hist(frequency, bins=5)
+        plt.hist(frequency, bins=5, histtype="bar", rwidth=0.98)
         plt.xlabel("frequency")
         plt.ylabel("customers")
         plt.show()
@@ -47,7 +47,7 @@ def main():
         )
         data = cursor.fetchall()
         money = [item[0] for item in data]
-        plt.hist(money, bins=5)
+        plt.hist(money, bins=5, histtype="bar", rwidth=0.98)
         plt.xlabel("monetary value")
         plt.ylabel("customers")
         plt.show()
