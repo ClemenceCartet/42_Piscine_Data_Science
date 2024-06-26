@@ -20,25 +20,41 @@ def load(path: str):
 
 def main():
     """Main function"""
-    test_knight = load("Test_knight.csv")
     train_knight = load("Train_knight.csv")
-    if test_knight is not None and train_knight is not None:
+    test_knight = load("Test_knight.csv")
+    if train_knight is not None and test_knight is not None:
         grouped = train_knight.groupby("knight")
-        jedi_data = grouped.get_group('Jedi')
-        sith_data = grouped.get_group('Sith')
-        jf = jedi_data.get(["Survival"])
-        jp = jedi_data.get(["Deflection"])
-        sf = sith_data.get(["Survival"])
-        sp = sith_data.get(["Deflection"])
-
+        jedi_data = grouped.get_group("Jedi")
+        sith_data = grouped.get_group("Sith")
         fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(10, 8))
-        # axes[0, 1].scatter(jf, range(len(jf)), color="blue", label="Jedi", s=30, alpha=0.4, edgecolors='white')
-        # axes[0, 1].scatter(sf, range(len(sf)), color="red", label="Sith", s=30, alpha=0.4, edgecolors='white')
-        axes[0, 1].scatter(jf, jp, color="blue", s=30, alpha=0.4, edgecolors='white')
-        axes[0, 1].scatter(sf, sp, color="red", s=30, alpha=0.4, edgecolors='white')
-        axes[0, 1].set_xlabel("Friendship")
-        axes[0, 1].set_ylabel("Power")
-        axes[0, 1].legend(labels=('Jedi','Sith'))
+
+        features: list[tuple] = [
+            ("Sensitivity", "Power"),
+            ("Burst", "Hability"),
+        ]
+
+        for i, trait in enumerate(features):
+            js, jp = jedi_data[trait[0]], jedi_data[trait[1]]
+            ss, sp = sith_data[trait[0]], sith_data[trait[1]]
+            ks, kp = test_knight[trait[0]], test_knight[trait[1]]
+            axes[0, i].scatter(
+                js, jp, color="blue", s=30, alpha=0.4, edgecolors="white"
+            )
+            axes[0, i].scatter(
+                ss, sp, color="red", s=30, alpha=0.4, edgecolors="white"
+            )
+            axes[0, i].set_xlabel(trait[0])
+            axes[0, i].set_ylabel(trait[1])
+            axes[0, i].legend(labels=("Jedi", "Sith"))
+
+            axes[1, i].scatter(
+                ks, kp, color="green", s=30, alpha=0.4, edgecolors="white"
+            )
+            axes[1, i].set_xlabel(trait[0])
+            axes[1, i].set_ylabel(trait[1])
+            axes[1, i].legend(labels=("Knight",))
+
+        plt.tight_layout()
         plt.show()
 
 

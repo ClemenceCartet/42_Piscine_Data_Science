@@ -20,31 +20,26 @@ def load(path: str):
 
 def main():
     """Main function"""
-    test_knight = load("Test_knight.csv")
-    if test_knight is not None:
-        test_knight.hist(
-            figsize=(20, 13), grid=False, color="g", layout=(3, 10)
-        )
-        plt.show()
+    data = load("Train_knight.csv")
+    if data is not None:
+        print(data.head(2))
+        for col in data.columns:
+            if not pd.api.types.is_string_dtype(data[col]):
+                # data[col] = data[col] / data[col].abs().max()
+                data[col] = (data[col] - data[col].min()) / (
+                    data[col].max() - data[col].min()
+                )
+        print(data.head(2))
 
-    train_knight = load("Train_knight.csv")
-    if train_knight is not None:
-        grouped = train_knight.groupby("knight")
+        grouped = data.groupby("knight")
         jedi_data = grouped.get_group("Jedi")
         sith_data = grouped.get_group("Sith")
-        axes = jedi_data.hist(
-            figsize=(20, 13),
-            alpha=0.5,
-            color="b",
-            layout=(3, 10),
-        )
-        sith_data.hist(
-            ax=axes.ravel(),
-            figsize=(20, 13),
-            alpha=0.5,
-            color="r",
-            layout=(3, 10),
-        )
+        js, jp = jedi_data["Sensitivity"], jedi_data["Power"]
+        ss, sp = sith_data["Sensitivity"], sith_data["Power"]
+        plt.scatter(js, jp, color="blue", s=30, alpha=0.4, edgecolors="white")
+        plt.scatter(ss, sp, color="red", s=30, alpha=0.4, edgecolors="white")
+        plt.xlabel("Sensitivity")
+        plt.ylabel("Power")
         plt.legend(labels=("Jedi", "Sith"))
         plt.show()
 

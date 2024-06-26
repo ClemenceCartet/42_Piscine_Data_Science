@@ -21,9 +21,9 @@ def main():
     """Main function"""
     train_knight = load("Train_knight.csv")
     if train_knight is not None:
-        train_knight = train_knight.replace({'knight': 'Jedi'}, 1)
-        train_knight = train_knight.replace({'knight': 'Sith'}, 0)
-        res = train_knight.corr()['knight'].sort_values(ascending=False)
+        train_knight = train_knight.replace({"knight": "Jedi"}, 1)
+        train_knight = train_knight.replace({"knight": "Sith"}, 0)
+        res = train_knight.corr()["knight"].sort_values(ascending=False)
         print(res)
 
 
